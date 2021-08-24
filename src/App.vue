@@ -50,9 +50,6 @@ export default {
   },
   data () {
     return {
-      // color: '#217751',
-      // width: '20',
-      // height: '20',
       highlighted: {
         dates: [                  
          ],      
@@ -88,7 +85,7 @@ export default {
   },
   created() {
     this.getCurrentWeather();
-    // this.getHolidaysApi();
+    this.getHolidaysApi();
     this.startOfSemester();
   },
   methods: {
