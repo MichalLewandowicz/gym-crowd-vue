@@ -297,7 +297,7 @@ export default {
     loadDoc() {
       var comp = this;
       var xhr = new XMLHttpRequest();
-      var url = "https://gym-crowdedness-predictions.herokuapp.com/";
+      var url = "https://sri-app-backup.herokuapp.com/";
       xhr.open("POST", url, true);
       xhr.setRequestHeader("Content-Type", "application/json");
       xhr.onreadystatechange = function () {
@@ -440,6 +440,6 @@ li {
     grid-template-columns: repeat(5, 100px [col-start]);
     list-style: none;
     }
-} /* end media-query min-width */
+}
 
 </style>
