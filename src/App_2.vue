@@ -2,48 +2,43 @@
   <div id="app">
     <main>
 
-      <div class="grid-container">
-        <div class="location">{{ city }}</div>
+      <h4>Select date:</h4>
+      <datepicker class="datepick" v-model="date" :monday-first="true" :highlighted="highlighted"
+      :value="date"
+      @selected="selectedDate"
+      format="dd/MM/yyyy"></datepicker>
 
-        <div class="left">{{ format_day(date) }}, {{ format_date(date) }} {{ holidayName }}</div>
-        <div class="date-picker">
-          <datepicker class="datepick" v-model="date" :monday-first="true" :highlighted="highlighted"
-          calendar-class="cal-class"
-          :value="date"
-          @selected="selectedDate"
-          format="dd/MM/yyyy"></datepicker>
-        </div>
+      <h4>Select time:</h4>
+      <timeselector v-model="myTime" :h24="true" displayFormat="HH" :interval="{h:1, m:60}" @selectedHour="selectedTime" placeholder="Select time"></timeselector>
 
-        <div class="left">{{ myTime2 }}</div>
-        <div class="time-picker">
-          <timeselector class="timepick" v-model="myTime" :h24="true" displayFormat="HH" :interval="{h:1, m:60}" @selectedHour="selectedTime"></timeselector>
-        </div>
-
-        <div class="left">{{ capitalizeDescription(description) }}</div>
-        <div class="weather_info">Precipitation: {{ precipitation }}&#37;</div>
-
-        <div class="temp">{{ Math.round(temp) }}&#176;C{{item}} <img v-bind:src="'http://openweathermap.org/img/wn/' + iconId + '@2x.png' "  /> </div>
-        <div class="weather_info">Humidity: {{ humidity }}&#37;</div>        
-
-        <div class="weather_info">Wind speed: {{ Math.round(wind*3.6) }}km/h</div>
-        <div class="weather_info">Feels like: {{ Math.round(feels_like) }}&#176;C</div>
-
-      </div> <!-- end grid-container -->
-      
       <button class="btn" @click="callModel">Predict</button>
-      <div class="weather_info">{{ prediction }}</div>
-      <hr class="hr1">
 
-      <horizontal-scroll>
-        <ul class="future-weather">
-          <li v-for="w in futureWeather" v-bind:key="w.date">
-            <div class="fw">{{item}} <img v-bind:src="'http://openweathermap.org/img/wn/' + w.icon + '@2x.png' "  /></div>
-            <div class="fw">{{ format_day(w.date) }}</div>
-            <div class="fw">{{ Math.round(w.temp) }}&#176;C</div>
-          </li>
-        </ul>
-      </horizontal-scroll>
-      <router-view/>
+      <div class="date">{{ prediction }}</div>
+
+
+      <div class="weather-wrap">
+        <div class="location-box">
+          <div class="location">Athlone, IE</div>
+          <div class="date">{{ format_day(date) }}, {{ format_date(date) }}</div>
+          <div class="time">{{ myTime2 }}</div>
+          <div class="holiday">{{ holidayName }}</div>
+        </div>
+
+        <div class="weather-box">
+          <div class="temp">{{ Math.round(temp) }}&#176;C {{item}} <img v-bind:src="'http://openweathermap.org/img/wn/' + iconId + '@2x.png' "  />
+            <div class="description">{{ capitalizeDescription(description) }}</div>
+          </div>
+          <!-- <div class="weather">{{ capitalizeDescription(description) }}</div> -->
+          <!-- https://openweathermap.org/img/wn/10d@2x.png
+          https://openweathermap.org/img/wn/01d@2x.png -->
+          <div class="icon">
+            <!-- {{item}}
+            <img v-bind:src="'http://openweathermap.org/img/wn/' + iconId + '@2x.png' "  /> -->
+          </div>
+        </div>
+      </div>
+
+    <router-view/>
     </main>
 
   </div>
@@ -55,18 +50,14 @@ import moment from "moment";
 import Datepicker from 'vuejs-datepicker';
 import Timeselector from 'vue-timeselector';
 
-import HorizontalScroll from 'vue-horizontal-scroll'
-import 'vue-horizontal-scroll/dist/vue-horizontal-scroll.css'
-
 export default {
   name: "App",
   components: {
     Datepicker,
-    Timeselector,
-    HorizontalScroll
+    Timeselector
   },
   data () {
-    return {      
+    return {
       highlighted: {
         dates: [                  
          ],      
@@ -81,16 +72,11 @@ export default {
       myTime2: '',
       date: '',
       temp: '',
-      feels_like: '',
-      humidity: '',
-      wind: '',
-      precipitation: '',
       description: '',
       holiday: '',
       holidayName: '',
       item: '',
       iconId: '',
-      futureWeather: [],
       base_url: 'https://api.openweathermap.org/data/2.5/',
       APIkey: "3dd52f411c1cd3bfdebc566e4b72cd61",
       city: "Athlone",
@@ -110,7 +96,7 @@ export default {
   },
   created() {
     this.getCurrentWeather();
-    this.getHolidaysApi();
+    // this.getHolidaysApi();
     this.startOfSemester();
   },
   methods: {
@@ -123,30 +109,17 @@ export default {
         this.temp = this.weather.list[0].main.temp;
         this.time = this.weather.list[0].dt_txt.split(" ")[1];
         this.description = this.weather.list[0].weather[0].description;
-        this.myTime2 = this.time.split(":")[0] + ":00";
-        this.highlighted.dates.push(new Date(this.weather.list[0].dt_txt))    
+        this.myTime2 = this.time.split(":")[0] + ":00"
+        // this.myTime2 = this.weather.list[0].dt_txt.split(" ")[1].split(":")[0] + ":00:00";
+        this.highlighted.dates.push(new Date(this.weather.list[0].dt_txt))        
         this.iconId = this.weather.list[0].weather[0].icon;
-        this.feels_like = this.weather.list[0].main.feels_like;
-        this.humidity = this.weather.list[0].main.humidity;
-        this.wind = this.weather.list[0].wind.speed;
-        this.precipitation = this.weather.list[0].pop;
-
-        this.weather.list.forEach(list => {
-          if (list.dt_txt.split(" ")[1] == this.time) {
-           const data = {
-             'date': list.dt_txt,
-             'temp': list.main.temp,
-             'icon': list.weather[0].icon       
-          }
-          this.futureWeather.push(data);
-        }
-      })
       });
     },
     selectedTime() {
       this.$nextTick(function() {     
         this.time = this.myTime.toString().split(" ")[4];
         this.myTime2 = this.time.split(":")[0] + ":00";
+        // this.description = this.weather.list[0].weather[0].main;
         this.getDayOfWeek();
       })
     },
@@ -192,6 +165,15 @@ export default {
         "November",
         "December",
       ];
+      // let days = [
+      //   "Monday",
+      //   "Tuesday",
+      //   "Wednesday",
+      //   "Thursday",
+      //   "Friday",
+      //   "Saturday",
+      //   "Sunday",
+      // ];
 
       let day = this.days[d.getDay()];
       let date = d.getDate();
@@ -239,25 +221,7 @@ export default {
           this.temp = list.main.temp;
           this.description = list.weather[0].description;
           this.iconId = list.weather[0].icon;
-          this.precipitation = list.pop;
-          this.humidity = list.main.humidity;
-          this.wind = list.wind.speed;
-          this.feels_like = list.main.feels_like;
         }
-        this.futureWeather.date = list.dt_txt;
-        this.futureWeather.temp = list.main.temp;
-        this.futureWeather.icon = list.weather[0].icon;
-        this.futureWeather.splice(0);
-        this.weather.list.forEach(list => {
-          if (list.dt_txt.split(" ")[1] == this.time) {
-            const data = {
-              'date': list.dt_txt,
-              'temp': list.main.temp,
-              'icon': list.weather[0].icon       
-            }
-            this.futureWeather.push(data);
-          }
-        })
       })
     },
     getHolidays() {
@@ -273,13 +237,14 @@ export default {
     findHoliday() {
       const h = this.holidaysDates.find( ({ date }) => date == this.date);
       if(h) {
-        this.holidayName = "(" + h.name + ")";
+        this.holidayName = h.name;
       } else {
         this.holidayName = "";
       }
     },
     splitTime() {
       this.modelHour = parseInt(this.time.split(':')[0]);
+
       this.modelDayOfMonth = parseInt(this.date.split('-')[2]);
       this.modelMonth = parseInt(this.date.split('-')[1]);
     },
@@ -306,6 +271,7 @@ export default {
           comp.prediction = "Gym crowd size prediction: " + p["Gym crowd size prediction "];
         }
       };
+
       var data = JSON.stringify({
         "day_of_week":[this.modelDayOfWeek],
         "is_weekend":[this.modelIsWeekend],
@@ -319,65 +285,36 @@ export default {
       console.log("Data sent:", data);
 	},
   },
+
 };
+
 </script>
 
 <style>
 * {
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+  max-width: 600px;
+  font-size: 20px;
   background-repeat: no-repeat;
   background-attachment: fixed;  
   background-size: cover;
-  color: #0d1a26;
 }
 body {
-  background-image: url('./assets/background.png');
-}
-.grid-container {
-  display: grid;
-  grid-template-columns: auto;
-}
-.temp {
-  grid-row: 2/2;
-}
-.date-picker {
-  text-align: center;
-  width: 100%;
-}
-.time-picker {
-  max-width: 173px;
-  padding-bottom: 3px;
-}
-.location {
-  color: #172d44;
-  font-size: 30px;
-  font-weight: 500;
-  text-shadow: 1px 3px rgba(0, 0, 0, 0.25);
-}
-.left {
-  padding-bottom: 3px;
-  color: #172d44;
-  font-size: 20px;
-  font-weight: 500;
-}
-.weather_info {
-  font-size: 20px;
-  font-weight: 500;
-}
-.temp {
-  font-size: 60px;
-  font-weight: 500;
-  text-shadow: 1px 4px rgba(0, 0, 0, 0.25);
-}
-.temp img {
-  vertical-align: middle;
-  padding-bottom: 12px;
+  font-family: "Quicksand", sans-serif;
+  /* padding: 25px; */
+  background-image: url('./assets/back5.jpg');
 }
 main {
-  border-radius: 4px;
-  padding: 30px;
-  max-width: 800px;
-  font-family: "Quicksand", sans-serif;
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.55));
+  min-height: 100vh;
+  padding:25px;
 }
+/* #app {
+  
+} */
+
 .btn {
   padding: 4px 8px;
   margin: 10px 0;
@@ -385,61 +322,79 @@ main {
   background-color: #fff;
   font-family: "Quicksand", sans-serif;
   font-weight: 600;
-  font-size: 20px;
   border-radius: 5px;
   box-shadow: 1px 2px rgba(0, 0, 0, 0.15);
-}
-hr.hr1 {
-  border: 1px solid #6599cb;
-}
-.future-weather {
-  display: grid;
-  grid-template-columns: repeat(5, 100px [col-start]);
-  list-style: none;
-  }
-li {
-  text-align: center;
-}
-.fw {
-  font-weight: 500;
+
 }
 
-@media screen and (min-width: 480px) {
-  .date-picker .datepick {
-    font-size: 18px;
-  }
-  .grid-container {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    grid-gap: 10px;
-  }
-  .location {
-    grid-column: 1/4;
-  }
-  .left {
-    grid-column: 1/3;
-    padding-bottom: 0;
-  }
-  .weather_info {
-    grid-column: 3/4;
-  }
-  .temp {
-    grid-column: 1/3;
-    grid-row: 5/9;
-  }
-  main {
-    background-color: #cdddee;
-    margin: 50px auto;
-  }
-  ul.future-weather li {
-    display: inline;
-  }
-  .future-weather {
-    display: grid;
-    grid-gap: 50px;
-    grid-template-columns: repeat(5, 100px [col-start]);
-    list-style: none;
-    }
-} /* end media-query min-width */
+.location-box .location {
+  padding-top: 10px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 500;
+  text-align: center;
+  text-shadow: 1px 3px rgba(0, 0, 0, 0.25);
+}
+.location-box .date {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300;
+  text-align: center;
+  padding: 10px;
+}
+.location-box .time {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300;
+  text-align: center;
+}
+.location-box .holiday {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300;
+  text-align: center;
+  padding: 10px;
+}
+
+.weather-box {
+  text-align: center;
+  vertical-align: baseline;
+  /* padding: 1px 25px; */
+  color: #254c71;
+  text-shadow: 1px 2px rgba(0, 0, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  box-shadow: 2px 3px rgba(155, 155, 155, 0.35);
+}
+.weather-box .temp {
+  /* margin: 10px; */
+  display: inline-block;
+  /* padding: 10px 25px; */
+  /* color: #536878; */
+  /* color: #254c71; */
+  font-size: 60px;
+  font-weight: 500;
+  /* text-aling: center;
+  text-shadow: 1px 2px rgba(0, 0, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  box-shadow: 3px 4px rgba(0, 0, 0, 0.35); */
+}
+.weather-box img {
+  vertical-align: middle;
+  padding-bottom: 10px;
+}
+.weather-box .description {
+  padding-bottom: 10px;
+  /* color: #254c71; */
+  font-size: 26px;
+  /* font-weight: 500; */
+  /* text-shadow: 1px 2px rgba(0, 0, 0, 0.25); */
+}
+.weather {
+  /* margin: auto;
+  max-width: 800px; */
+}
+
 
 </style>

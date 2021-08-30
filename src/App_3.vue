@@ -31,7 +31,7 @@
       </div> <!-- end grid-container -->
       
       <button class="btn" @click="callModel">Predict</button>
-      <div class="weather_info">{{ prediction }}</div>
+      <div class="weather_info">Prediction{{ prediction }}</div>
       <hr class="hr1">
 
       <horizontal-scroll>
@@ -43,6 +43,31 @@
           </li>
         </ul>
       </horizontal-scroll>
+
+      <!-- <ul id="future-weather">
+        <li class="fw" v-for="w in futureWeather" v-bind:key="w.date">
+          {{ format_day(w.date) }}
+          {{ Math.round(w.temp) }}&#176;C
+          {{item}} <img v-bind:src="'http://openweathermap.org/img/wn/' + iconId + '@2x.png' "  />
+        </li>
+      </ul> -->
+
+      <!-- <ul class="future-weather">
+        <li v-for="w in futureWeather" v-bind:key="w.date">
+          <div class="fw">{{item}} <img v-bind:src="'http://openweathermap.org/img/wn/' + w.icon + '@2x.png' "  /></div>
+          <div class="fw">{{ format_day(w.date) }}</div>
+          <div class="fw">{{ Math.round(w.temp) }}&#176;C</div>
+        </li>
+      </ul> -->
+
+      <!-- <div>{{ futureWeather }}</div>       -->
+
+          <!-- <div
+              class="weather"
+              v-for="w in weather.list"
+              v-bind:key="w.id"
+            >{{ weather.list }}</div> -->
+
       <router-view/>
     </main>
 
@@ -77,6 +102,7 @@ export default {
         "01-17","01-18","01-19","01-20","01-21","01-22","01-23","01-24","01-25","01-26","01-27","01-28","01-29","01-30","08-24","08-25",
         "08-26","08-27","08-28","08-29","08-30","08-31","09-01","09-02","09-03","09-04","09-05","09-06","09-07","09-08"
       ],
+      query: '',
       myTime: '',
       myTime2: '',
       date: '',
@@ -91,6 +117,8 @@ export default {
       item: '',
       iconId: '',
       futureWeather: [],
+      futureWeather2: [],
+      newWeatherData: [],
       base_url: 'https://api.openweathermap.org/data/2.5/',
       APIkey: "3dd52f411c1cd3bfdebc566e4b72cd61",
       city: "Athlone",
@@ -110,13 +138,14 @@ export default {
   },
   created() {
     this.getCurrentWeather();
-    this.getHolidaysApi();
+    // this.getHolidaysApi();
     this.startOfSemester();
   },
   methods: {
     getCurrentWeather() {
+      this.query = this.city;
       axios
-      .get(`${this.base_url}forecast?q=${this.city}&units=metric&appid=${this.APIkey}`)
+      .get(`${this.base_url}forecast?q=${this.query}&units=metric&appid=${this.APIkey}`)
       .then((res) => {
         this.weather = res.data;
         this.date = this.weather.list[0].dt_txt.split(" ")[0];
@@ -124,6 +153,7 @@ export default {
         this.time = this.weather.list[0].dt_txt.split(" ")[1];
         this.description = this.weather.list[0].weather[0].description;
         this.myTime2 = this.time.split(":")[0] + ":00";
+        // this.myTime2 = this.weather.list[0].dt_txt.split(" ")[1].split(":")[0] + ":00:00";
         this.highlighted.dates.push(new Date(this.weather.list[0].dt_txt))    
         this.iconId = this.weather.list[0].weather[0].icon;
         this.feels_like = this.weather.list[0].main.feels_like;
@@ -147,6 +177,7 @@ export default {
       this.$nextTick(function() {     
         this.time = this.myTime.toString().split(" ")[4];
         this.myTime2 = this.time.split(":")[0] + ":00";
+        // this.description = this.weather.list[0].weather[0].main;
         this.getDayOfWeek();
       })
     },
@@ -192,6 +223,15 @@ export default {
         "November",
         "December",
       ];
+      // let days = [
+      //   "Monday",
+      //   "Tuesday",
+      //   "Wednesday",
+      //   "Thursday",
+      //   "Friday",
+      //   "Saturday",
+      //   "Sunday",
+      // ];
 
       let day = this.days[d.getDay()];
       let date = d.getDate();
@@ -243,21 +283,25 @@ export default {
           this.humidity = list.main.humidity;
           this.wind = list.wind.speed;
           this.feels_like = list.main.feels_like;
+
+
         }
-        this.futureWeather.date = list.dt_txt;
-        this.futureWeather.temp = list.main.temp;
-        this.futureWeather.icon = list.weather[0].icon;
-        this.futureWeather.splice(0);
-        this.weather.list.forEach(list => {
-          if (list.dt_txt.split(" ")[1] == this.time) {
-            const data = {
-              'date': list.dt_txt,
-              'temp': list.main.temp,
-              'icon': list.weather[0].icon       
+
+
+          this.futureWeather.date = list.dt_txt;
+          this.futureWeather.temp = list.main.temp;
+          this.futureWeather.icon = list.weather[0].icon;
+          this.futureWeather.splice(0);
+          this.weather.list.forEach(list => {
+            if (list.dt_txt.split(" ")[1] == this.time) {
+              const data = {
+                'date': list.dt_txt,
+                'temp': list.main.temp,
+                'icon': list.weather[0].icon       
+               }
+               this.futureWeather.push(data);
             }
-            this.futureWeather.push(data);
-          }
-        })
+          })
       })
     },
     getHolidays() {
@@ -280,6 +324,7 @@ export default {
     },
     splitTime() {
       this.modelHour = parseInt(this.time.split(':')[0]);
+
       this.modelDayOfMonth = parseInt(this.date.split('-')[2]);
       this.modelMonth = parseInt(this.date.split('-')[1]);
     },
@@ -306,6 +351,7 @@ export default {
           comp.prediction = "Gym crowd size prediction: " + p["Gym crowd size prediction "];
         }
       };
+
       var data = JSON.stringify({
         "day_of_week":[this.modelDayOfWeek],
         "is_weekend":[this.modelIsWeekend],
@@ -319,7 +365,9 @@ export default {
       console.log("Data sent:", data);
 	},
   },
+
 };
+
 </script>
 
 <style>
@@ -373,6 +421,7 @@ body {
   padding-bottom: 12px;
 }
 main {
+  /* background-image: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.55)); */
   border-radius: 4px;
   padding: 30px;
   max-width: 800px;
@@ -389,12 +438,17 @@ main {
   border-radius: 5px;
   box-shadow: 1px 2px rgba(0, 0, 0, 0.15);
 }
+
 hr.hr1 {
   border: 1px solid #6599cb;
 }
 .future-weather {
   display: grid;
+  /* grid-gap: 50px; */
+  /* width: 300px;
+  height: 200px; */
   grid-template-columns: repeat(5, 100px [col-start]);
+  /* grid-template-rows: 50% 50%; */
   list-style: none;
   }
 li {
@@ -437,9 +491,32 @@ li {
   .future-weather {
     display: grid;
     grid-gap: 50px;
+    /* width: 300px;
+    height: 200px; */
     grid-template-columns: repeat(5, 100px [col-start]);
+    /* grid-template-rows: 50% 50%; */
     list-style: none;
     }
+
+  /* main {
+    border-radius: 4px;
+    padding: 50px;
+    margin: 0 auto;
+    max-width: 800px;
+    font-family: "Quicksand", sans-serif;
+  } */
+  /* .btn {
+    padding: 4px 8px;
+    margin: 10px 0;
+    border: 1px solid #1569C7;
+    background-color: #fff;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 600;
+    border-radius: 5px;
+    box-shadow: 1px 2px rgba(0, 0, 0, 0.15);
+
+  } */
+
 } /* end media-query min-width */
 
 </style>
